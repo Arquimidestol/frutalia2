@@ -1,0 +1,193 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Frutalia - Pedido de Jugos</title>
+  <style>
+    body {
+      font-family: 'Segoe UI', sans-serif;
+      background: linear-gradient(to bottom right, #f9f871, #fbc2eb);
+      margin: 0;
+      padding: 0;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: flex-start;
+      min-height: 100vh;
+    }
+
+    h1 {
+      color: #ff6347;
+      margin-top: 2rem;
+    }
+
+    form {
+      background: #ffffffdd;
+      padding: 1.5rem;
+      border-radius: 15px;
+      box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+      width: 90%;
+      max-width: 500px;
+      margin-bottom: 2rem;
+    }
+
+    label {
+      display: block;
+      margin-top: 1rem;
+      font-weight: bold;
+    }
+
+    input, select, textarea, button {
+      width: 100%;
+      padding: 0.7rem;
+      margin-top: 0.5rem;
+      border: 1px solid #ccc;
+      border-radius: 10px;
+      font-size: 1rem;
+    }
+
+    button {
+      background-color: #ff9800;
+      color: white;
+      font-weight: bold;
+      cursor: pointer;
+      border: none;
+      transition: background-color 0.3s;
+    }
+
+    button:hover {
+      background-color: #f57c00;
+    }
+
+    #mensaje {
+      margin-top: 1rem;
+      font-size: 1.1rem;
+      color: green;
+      text-align: center;
+    }
+
+    #registros {
+      width: 90%;
+      max-width: 800px;
+      background: #fff;
+      padding: 1rem;
+      border-radius: 10px;
+      box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+      margin-bottom: 2rem;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+    }
+
+    th, td {
+      padding: 0.75rem;
+      border-bottom: 1px solid #ddd;
+      text-align: left;
+    }
+
+    th {
+      background-color: #ffcc80;
+    }
+  </style>
+</head>
+
+<body>
+  <h1>Frutalia - ¡Pide tu jugo natural!</h1>
+  <form id="pedidoForm">
+    <label for="nombre">Nombre del cliente</label>
+    <input type="text" id="nombre" name="nombre" required>
+
+    <label for="telefono">Teléfono</label>
+    <input type="tel" id="telefono" name="telefono" required>
+
+    <label for="sabor">Sabor del jugo</label>
+    <select id="sabor" name="sabor" required>
+      <option value="Naranja">Naranja</option>
+      <option value="Mango">Mango</option>
+      <option value="Fresa">Fresa</option>
+      <option value="Piña">Piña</option>
+    </select>
+
+    <label for="tamano">Tamaño</label>
+    <select id="tamano" name="tamano" required>
+      <option value="Chico">Chico</option>
+      <option value="Mediano">Mediano</option>
+      <option value="Grande">Grande</option>
+    </select>
+
+    <label for="comentarios">Comentarios adicionales</label>
+    <textarea id="comentarios" name="comentarios" rows="3"></textarea>
+
+    <button type="submit">Enviar Pedido</button>
+    <div id="mensaje"></div>
+  </form>
+
+  <div id="registros">
+    <h2>Pedidos recientes</h2>
+    <table id="tablaPedidos">
+      <thead>
+        <tr>
+          <th>Nombre</th>
+          <th>Teléfono</th>
+          <th>Sabor del jugo</th>
+          <th>Tamaño</th>
+          <th>Comentarios</th>
+        </tr>
+      </thead>
+      <tbody></tbody>
+    </table>
+  </div>
+
+  <script>
+    // Nota: Este formulario envía datos a una hoja de cálculo de Google Sheets llamada "Base para proyecto ia1"
+    const scriptURL = 'https://script.google.com/macros/s/AKfycbwOtS6V9Zkq0ukJBav1J2EbKAr0Dvbz-qFkxIeUtaEICsenhO48Af3pBHAjCoArobMdfg/exec';
+
+    document.getElementById('pedidoForm').addEventListener('submit', function(e) {
+      e.preventDefault();
+
+      const formData = new FormData(this);
+      fetch(scriptURL, { method: 'POST', body: formData })
+        .then(response => {
+          document.getElementById('mensaje').textContent = 'Tu pedido ha sido enviado con éxito, pasa a recogerlo en 10 minutos. ¡Frutalia agradece tu preferencia!';
+          document.getElementById('pedidoForm').reset();
+          cargarPedidos();
+        })
+        .catch(error => {
+          document.getElementById('mensaje').textContent = 'Error al enviar el pedido. Intenta nuevamente.';
+          console.error('Error!', error.message);
+        });
+    });
+
+    function cargarPedidos() {
+      fetch(scriptURL + '?read=true')
+        .then(response => response.json())
+        .then(data => {
+          const tbody = document.querySelector('#tablaPedidos tbody');
+          tbody.innerHTML = '';
+          data.forEach(row => {
+            const tr = document.createElement('tr');
+            tr.innerHTML = `
+              <td>${row.nombre}</td>
+              <td>${row.telefono}</td>
+              <td>${row.sabor}</td>
+              <td>${row.tamano}</td>
+              <td>${row.comentarios}</td>
+            `;
+            tbody.appendChild(tr);
+          });
+        })
+        .catch(error => {
+          console.error('Error al cargar los pedidos:', error);
+        });
+    }
+
+    // Cargar pedidos al inicio
+    cargarPedidos();
+  </script>
+</body>
+
+</html>
